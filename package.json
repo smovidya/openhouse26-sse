@@ -14,6 +14,5 @@
 		"wrangler": "^4.42.1"
 	},
 	"dependencies": {
-		"elysia": "^1.4.9"
 	}
 }
