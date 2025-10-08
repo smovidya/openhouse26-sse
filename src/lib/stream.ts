@@ -12,7 +12,8 @@ export interface StreamController {
 	enqueue(data: any): InternalStreamCommand;
 }
 
-type StreamGenerator = AsyncGenerator<InternalStreamCommand, any, any>;
+export type StreamGenerator = AsyncGenerator<InternalStreamCommand, any, any>;
+
 export class StopError extends Error {
 	readonly reason?: unknown;
 	constructor(reason?: unknown) {

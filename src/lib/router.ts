@@ -1,4 +1,4 @@
-import { createStream, type StreamController } from "./stream";
+import { createStream, type StreamController, type StreamGenerator } from "./stream";
 
 function normalizeTrailingSlash(url: string) {
 	while (url.endsWith('/')) {
@@ -23,9 +23,10 @@ class RequestContextImpl implements RequestContext {
 	}
 }
 
-type SSEHandler = (context: SSEContext) => AsyncGenerator;
+type SSEHandler = (context: SSEContext) => StreamGenerator;
 type RequestHandler = SSEHandler;
 
+// No dynamic path becuase im too lazy, use query params
 export class Router {
 	routes = new Map<string, RequestHandler>();
 
