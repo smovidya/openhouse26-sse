@@ -54,7 +54,7 @@
 			],
 			"routes": [
 				{
-					"pattern": "ena.scichulaopenhouse.com",
+					"pattern": "isei.scichulaopenhouse.com",
 					"custom_domain": true
 				}
 			],
@@ -63,7 +63,7 @@
 		"production": {
 			"routes": [
 				{
-					"pattern": "scichulaopenhouse.com",
+					"pattern": "sse.scichulaopenhouse.com",
 					"custom_domain": true
 				}
 			],
