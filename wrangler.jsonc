@@ -10,21 +10,26 @@
 	"observability": {
 		"enabled": true
 	},
-	/**
-	 * Smart Placement
-	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
 	"placement": {
 		"mode": "smart"
 	},
+	/**
+	 * Dev config
+	 */
 	"d1_databases": [
 		{
 			"binding": "openhouse26_db",
 			"database_name": "openhouse26-db",
-			"database_id": "62624ef6-24a7-45e9-94d5-a955b19e7609",
-			"migrations_dir": "drizzle"
+			"database_id": "openhouse26_db_dev",
 		}
 	],
+	"vars": {
+		"ENVIRONMENT": "development"
+	},
+	/**
+	 * Environment specific config
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environments
+	 */
 	"env": {
 		"staging": {
 			"vars": {
@@ -43,7 +48,6 @@
 					"binding": "openhouse26_db",
 					"database_name": "openhouse26_db_staging",
 					"database_id": "df51e549-c836-416a-ba87-5168facb8aff",
-					"migrations_dir": "drizzle"
 				}
 			],
 			"routes": [
@@ -84,7 +88,6 @@
 					"binding": "openhouse26_db",
 					"database_name": "openhouse26-db",
 					"database_id": "62624ef6-24a7-45e9-94d5-a955b19e7609",
-					"migrations_dir": "drizzle"
 				}
 			],
 			"migrations": [
