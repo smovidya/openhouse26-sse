@@ -1,3 +1,4 @@
+import { Notifier } from "./app/notifier";
 import { router } from "./app/routes";
 
 export default {
@@ -5,3 +6,6 @@ export default {
 		return await router.handle(request);
 	}
 } satisfies ExportedHandler<Env>;
+
+export { Notifier };
+

@@ -9,10 +9,10 @@
 	"compatibility_date": "2025-10-08",
 	"durable_objects": {
 		"bindings": [
-			// {
-			// 	"class_name": "MyDurableObject",
-			// 	"name": "MY_DURABLE_OBJECT"
-			// }
+			{
+				"class_name": "Notifier",
+				"name": "NOTIFIER"
+			}
 		]
 	},
 	"observability": {
@@ -52,7 +52,14 @@
 					"custom_domain": true
 				}
 			],
-			"migrations": [],
+			"migrations": [
+				{
+					"tag": "v1",
+					"new_sqlite_classes": [
+						"Notifier"
+					]
+				}
+			],
 		},
 		"production": {
 			"routes": [
@@ -72,6 +79,14 @@
 					"migrations_dir": "drizzle"
 				}
 			],
+			"migrations": [
+				{
+					"tag": "v1",
+					"new_sqlite_classes": [
+						"Notifier"
+					]
+				}
+			]
 		}
 	}
 	/**
