@@ -7,14 +7,6 @@
 	"name": "openhouse26-sse",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-10-08",
-	"durable_objects": {
-		"bindings": [
-			{
-				"class_name": "Notifier",
-				"name": "NOTIFIER"
-			}
-		]
-	},
 	"observability": {
 		"enabled": true
 	},
@@ -37,6 +29,14 @@
 		"staging": {
 			"vars": {
 				"ENVIRONMENT": "staging"
+			},
+			"durable_objects": {
+				"bindings": [
+					{
+						"class_name": "Notifier",
+						"name": "NOTIFIER"
+					}
+				]
 			},
 			"d1_databases": [
 				{
@@ -70,6 +70,14 @@
 			],
 			"vars": {
 				"ENVIRONMENT": "production"
+			},
+			"durable_objects": {
+				"bindings": [
+					{
+						"class_name": "Notifier",
+						"name": "NOTIFIER"
+					}
+				]
 			},
 			"d1_databases": [
 				{
