@@ -1,3 +1,4 @@
+import type { MaybePromise } from "./router";
 
 type InternalStreamCommand = {
 	type: "stop";
@@ -11,7 +12,7 @@ export interface StreamController {
 	enqueue(data: any): InternalStreamCommand;
 }
 
-export type StreamGenerator = AsyncGenerator<InternalStreamCommand, any, any>;
+export type StreamIterator = AsyncIterator<InternalStreamCommand, any, any>;
 
 export class StopError extends Error {
 	readonly reason?: unknown;
@@ -24,8 +25,8 @@ export class StopError extends Error {
 }
 
 
-export function createStream<T extends object>(body: (controller: StreamController & T) => StreamGenerator, extras: T) {
-	let generator: StreamGenerator;
+export function createStream<T extends object>(body: (controller: StreamController & T) => MaybePromise<StreamIterator>, extras: T) {
+	let generator: MaybePromise<StreamIterator>;
 	return new ReadableStream({
 		start() {
 			const our: StreamController = {
@@ -44,6 +45,8 @@ export function createStream<T extends object>(body: (controller: StreamControll
 			generator = body({ ...our, ...extras });
 		},
 		async pull(controller) {
+			generator = await generator;
+
 			try {
 				const { value, done } = await generator.next();
 
@@ -61,7 +64,52 @@ export function createStream<T extends object>(body: (controller: StreamControll
 		},
 		cancel(reason) {
 			console.log("cancel");
-			generator.throw(new StopError(reason));
+			// generator.throw(new StopError(reason));
 		},
 	});
+}
+
+
+export function createSendableStream<T>() {
+	const buffer: T[] = [];
+	let closed = false;
+	let resolve: (() => void) | undefined = undefined;
+	let reject: ((err: any) => void) | undefined = undefined;
+
+	return {
+		send(value: T) {
+			if (closed) {
+				return;
+			}
+			buffer.push(value);
+			if (resolve) {
+				resolve();
+				resolve = undefined;
+				reject = undefined;
+			}
+		},
+		close() {
+			closed = true;
+			if (reject) {
+				reject(new StopError("closed"));
+				resolve = undefined;
+				reject = undefined;
+			}
+		},
+		stream: {
+			async next() {
+				if (buffer.length === 0) {
+					const p = Promise.withResolvers<void>();
+					resolve = p.resolve;
+					reject = p.reject;
+
+					await p.promise;
+				}
+				return {
+					done: closed,
+					value: buffer.pop()!
+				};
+			},
+		} satisfies AsyncIterator<T>
+	};
 }

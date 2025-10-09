@@ -9,4 +9,7 @@ export const router = new Router()
 			await sleep(500);
 			index += 1;
 		}
-	});
+	})
+	.sse("/user-event",({ }) => {
+
+	})
