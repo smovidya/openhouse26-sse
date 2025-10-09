@@ -3,7 +3,7 @@ import { getNotifierHandlerForUid } from "./app/load-balancer";
 import { Notifier } from "./app/notifier";
 import { router } from "./app/routes";
 
-export default class SSEWorker extends WorkerEntrypoint {
+export default class SSEWorker extends WorkerEntrypoint implements SSEWorkerRpc {
 	fetch(request: Request): Response | Promise<Response> {
 		return router.handle(request);
 	}
@@ -16,3 +16,7 @@ export default class SSEWorker extends WorkerEntrypoint {
 
 export { Notifier };
 
+// Please copy paste this into other project
+interface SSEWorkerRpc {
+	sendEvent(uid: string, data: string): Promise<void>;
+};
