@@ -12,11 +12,13 @@ interface RequestContext {
 	set: Partial<ResponseInit>;
 }
 
-interface SSEContext extends RequestContext, StreamController { }
+interface SetParams {
+	headers?: ResponseInit["headers"];
+}
 
 class RequestContextImpl implements RequestContext {
 	request: Request;
-	set: Partial<ResponseInit> = {};
+	set: SetParams = {};
 
 	constructor(request: Request) {
 		this.request = request;
@@ -46,14 +48,22 @@ interface RouterConfig {
 // No dynamic path becuase im too lazy, use query params
 export class Router {
 	config: RouterConfig;
-	constructor(config: RouterConfig) {
+	constructor(config: RouterConfig = {}) {
 		this.config = config;
 	}
 	// well we should use other thing
 	routes = new Map<string, Route[]>();
 
 	all(path: string, handler: RequestHandler) {
-		this.#addRoute("all", path, handler);
+		return this.#addRoute("all", path, handler);
+	}
+
+	route(method: HttpMethod[], path: string, handler: RequestHandler) {
+		return this.#addRoute(method, path, handler);
+	}
+
+	get(path: string, handler: RequestHandler) {
+		return this.#addRoute(["get"], path, handler);
 	}
 
 	#addRoute(method: HttpMethod[] | "all", path: string, handler: RequestHandler) {
@@ -61,7 +71,7 @@ export class Router {
 		const handlers = this.routes.get(key) ?? [];
 
 		handlers.push({
-			path,
+			path: key,
 			method,
 			handler,
 		});
@@ -74,7 +84,8 @@ export class Router {
 		const url = new URL(request.url);
 		const path = normalizeTrailingSlash(url.pathname);
 		const handlers = this.routes.get(path);
-		const route = handlers?.find(it => it.method === request.method.toLowerCase());
+		console.log({ path, handlers });
+		const route = handlers?.find(it => it.method.includes(request.method.toLowerCase()) || it.method === "all");
 
 		return route;
 	}
@@ -129,7 +140,6 @@ export class Router {
 					...setHeaders
 				},
 				...responseInitRest,
-				...setRest
 			});
 		} catch (e) {
 			console.error(e);

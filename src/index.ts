@@ -1,4 +1,4 @@
-import { router } from "./routes";
+import { router } from "./app/routes";
 
 export default {
 	async fetch(request, env, context) {
