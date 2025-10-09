@@ -1,3 +1,4 @@
+import { MultiMap } from "./multi-map";
 import { type StreamController } from "./stream";
 
 function normalizeTrailingSlash(url: string) {
@@ -9,16 +10,18 @@ function normalizeTrailingSlash(url: string) {
 
 interface RequestContext {
 	request: Request;
-	set: Partial<ResponseInit>;
+	set: SetParams;
 }
 
 interface SetParams {
-	headers?: ResponseInit["headers"];
+	headers: Record<string, string>;
 }
 
 class RequestContextImpl implements RequestContext {
 	request: Request;
-	set: SetParams = {};
+	set: SetParams = {
+		headers: {}
+	};
 
 	constructor(request: Request) {
 		this.request = request;
@@ -34,8 +37,8 @@ type RequestHandler = HttpRequestHandler;
 
 type HttpMethod = "get" | "post" | "put" | "patch";
 
-interface Route {
-	handler: RequestHandler;
+interface Route<Handler = RequestHandler> {
+	handler: Handler;
 	path: string;
 	method: string[] | "all";
 }
@@ -45,6 +48,9 @@ interface RouterConfig {
 	rickrollOnError?: boolean;
 }
 
+// well, not actually, just a pre-handle hook
+export type Middleware = (context: RequestContext) => MaybePromise<HandleResult | undefined | null | void>;
+
 // No dynamic path becuase im too lazy, use query params
 export class Router {
 	config: RouterConfig;
@@ -52,7 +58,8 @@ export class Router {
 		this.config = config;
 	}
 	// well we should use other thing
-	routes = new Map<string, Route[]>();
+	routes = new MultiMap<string, Route>();
+	middlewares: Middleware[] = [];
 
 	all(path: string, handler: RequestHandler) {
 		return this.#addRoute("all", path, handler);
@@ -66,17 +73,20 @@ export class Router {
 		return this.#addRoute(["get"], path, handler);
 	}
 
+	// No scoping because im too lazy
+	use(middleware: Middleware) {
+		this.middlewares.push(middleware);
+		return this;
+	}
+
 	#addRoute(method: HttpMethod[] | "all", path: string, handler: RequestHandler) {
 		const key = normalizeTrailingSlash(path);
-		const handlers = this.routes.get(key) ?? [];
-
-		handlers.push({
+		this.routes.add(key, {
 			path: key,
 			method,
 			handler,
 		});
 
-		this.routes.set(key, handlers);
 		return this;
 	}
 
@@ -84,15 +94,16 @@ export class Router {
 		const url = new URL(request.url);
 		const path = normalizeTrailingSlash(url.pathname);
 		const handlers = this.routes.get(path);
-		console.log({ path, handlers });
 		const route = handlers?.find(it => it.method.includes(request.method.toLowerCase()) || it.method === "all");
 
-		return route;
+		return {
+			middlewares: this.middlewares,
+			handler: route
+		};
 	}
 
 	async handle(request: Request): Promise<Response> {
-
-		const handler = this.#matchHandler(request);
+		const { handler, middlewares } = this.#matchHandler(request);
 		if (!handler) {
 			if (this.config.rickrollOnError) {
 				return Response.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
@@ -106,14 +117,28 @@ export class Router {
 		try {
 			const context = new RequestContextImpl(request);
 
+			for (const middleware of middlewares) {
+				const res = await middleware(context);
+				if (res && res instanceof Response) {
+					for (const [key, value] of Object.entries(this.config.headers ?? {})) {
+						if (!res.headers.has(key)) {
+							res.headers.append(key, value);
+						}
+					}
+
+					return res;
+				}
+			}
+
 			// do something to reponse based on context
-			const res = await handler.handler(context);
+			const res = await handler?.handler(context);
 			if (res instanceof Response) {
 				for (const [key, value] of Object.entries(this.config.headers ?? {})) {
 					if (!res.headers.has(key)) {
 						res.headers.append(key, value);
 					}
 				}
+
 				return res;
 			}
 
@@ -132,7 +157,7 @@ export class Router {
 			}
 
 			const { headers: responseInitHeaders, ...responseInitRest } = responseInit;
-			const { headers: setHeaders, ...setRest } = context.set;
+			const { headers: setHeaders } = context.set;
 
 			return new Response(data, {
 				headers: {
@@ -154,3 +179,18 @@ export class Router {
 	}
 }
 
+
+
+export interface CorsConfig {
+	allowedHosts: string[];
+}
+
+export function cors({ allowedHosts }: CorsConfig): Middleware {
+	return ({ request, set }) => {
+		const url = new URL(request.url);
+		if (allowedHosts.includes(url.host)) {
+			set.headers["Access-Control-Allow-Origin"] = url.origin;
+			set.headers["Access-Control-Allow-Credentials"] = "true";
+		}
+	};
+}

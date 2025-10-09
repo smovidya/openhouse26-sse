@@ -1,10 +1,20 @@
-import { Router } from "../lib/router";
+import { cors, Router, type Middleware } from "../lib/router";
 import { createStream, mapToUint8Array, streamEvent, streamHeaders } from "../lib/stream";
-import { flags } from "./feature-flag";
+import { flags, production, staging } from "./feature-flag";
 import { getNotifierHandlerForUid } from "./load-balancer";
 
-export const router = new Router()
-	.get("/sse", ({ }) => {
+export const router = new Router({
+	headers: {
+		"X-Powered-By": "Kotchasan"
+	}
+})
+	.use(cors({
+		allowedHosts: [
+			production && "https://scichulaopenhouse.com",
+			staging && "https://ena.scichulaopenhouse.com",
+		].filter(it => typeof it === "string")
+	}))
+	.get("/sse", () => {
 		const { stream, send, close } = createStream<string>();
 
 		const interval = setInterval(() => {
