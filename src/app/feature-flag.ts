@@ -6,7 +6,7 @@ export const production = env.ENVIRONMENT !== "production";
 export const notProduction = !production;
 
 export const flags = {
-	get something() {
+	get enableService() {
 		return false || notProduction;
 	}
 };

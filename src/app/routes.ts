@@ -1,5 +1,6 @@
 import { Router } from "../lib/router";
 import { createStream, mapToUint8Array, streamEvent, streamHeaders } from "../lib/stream";
+import { flags } from "./feature-flag";
 import { getNotifierHandlerForUid } from "./load-balancer";
 
 export const router = new Router()
@@ -37,6 +38,10 @@ export const router = new Router()
 					"Content-Type": "text/plain",
 				},
 			});
+		}
+
+		if (!flags.enableService) {
+			return Response.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
 		}
 
 		const notifier = getNotifierHandlerForUid(uid);
