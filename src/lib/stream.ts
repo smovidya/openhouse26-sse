@@ -25,7 +25,7 @@ export class StopError extends Error {
 }
 
 
-export function createStream<T extends object>(body: (controller: StreamController & T) => MaybePromise<StreamIterator>, extras: T) {
+export function createStreamFromAsyncGenerator<T extends object>(body: (controller: StreamController & T) => MaybePromise<StreamIterator>, extras: T) {
 	let generator: MaybePromise<StreamIterator>;
 	return new ReadableStream({
 		start() {
@@ -70,7 +70,7 @@ export function createStream<T extends object>(body: (controller: StreamControll
 }
 
 
-export function createSendableStream<T>() {
+export function createStream<T>() {
 	const buffer: T[] = [];
 	let closed = false;
 	let resolve: (() => void) | undefined = undefined;
@@ -96,20 +96,77 @@ export function createSendableStream<T>() {
 				reject = undefined;
 			}
 		},
-		stream: {
-			async next() {
+		stream: new ReadableStream({
+			async pull(controller) {
+				if (closed) {
+					controller.close();
+				}
+
 				if (buffer.length === 0) {
 					const p = Promise.withResolvers<void>();
 					resolve = p.resolve;
 					reject = p.reject;
 
-					await p.promise;
+					try {
+						await p.promise;
+					} catch (e) {
+						if (e instanceof StopError) {
+							controller.close();
+							return;
+						}
+						throw e;
+					}
 				}
-				return {
-					done: closed,
-					value: buffer.pop()!
-				};
+
+				controller.enqueue(buffer.pop()!);
 			},
-		} satisfies AsyncIterator<T>
+			cancel(reason) {
+				closed = true;
+			},
+		})
 	};
 }
+
+export function streamHeaders() {
+	return {
+		"Content-Type": "text/event-stream",
+		Connection: "keep-alive",
+		"Cache-Control": "no-cache",
+	} satisfies NonNullable<ResponseInit["headers"]>;
+}
+
+export function mapToUint8Array(stream: ReadableStream) {
+	return stream.pipeThrough(new TransformStream({
+		transform(chunk, controller) {
+			let s = (typeof chunk === "object" && chunk !== null) ? JSON.stringify(chunk) : String(chunk);
+			const buffer = new TextEncoder().encode(s);
+			controller.enqueue(buffer);
+		},
+	}));
+}
+
+interface StreamEvent {
+	event?: string,
+	data: string,
+	id?: string,
+	retry?: number; // in ms
+}
+
+export function streamEvent(event: StreamEvent) {
+	let text = `data: ${event.data}`;
+
+	if (event.event) {
+		text = `event: ${event.event}\n` + text;
+	}
+
+	if (event.id) {
+		text += `id: ${event.id}\n`;
+	}
+
+	if (event.retry) {
+		text += `retry: ${event.retry}\n`;
+	}
+
+	return text + '\n\n';
+}
+
