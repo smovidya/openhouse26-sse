@@ -1,5 +1,4 @@
 import { MultiMap } from "./multi-map";
-import { type StreamController } from "./stream";
 
 function normalizeTrailingSlash(url: string) {
 	while (url.endsWith('/')) {
