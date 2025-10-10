@@ -1,7 +1,3 @@
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "openhouse26-sse",
@@ -24,7 +20,7 @@
 		}
 	],
 	"vars": {
-		"ENVIRONMENT": "development"
+		"ENVIRONMENT": "development",
 	},
 	/**
 	 * Environment specific config
@@ -33,7 +29,8 @@
 	"env": {
 		"staging": {
 			"vars": {
-				"ENVIRONMENT": "staging"
+				"ENVIRONMENT": "staging",
+				"MAIN_SITE_URL": "https://ena.scichulaopenhouse.com"
 			},
 			"durable_objects": {
 				"bindings": [
@@ -73,7 +70,8 @@
 				}
 			],
 			"vars": {
-				"ENVIRONMENT": "production"
+				"ENVIRONMENT": "production",
+				"MAIN_SITE_URL": "https://scichulaopenhouse.com"
 			},
 			"durable_objects": {
 				"bindings": [

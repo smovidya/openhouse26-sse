@@ -1,5 +1,6 @@
+import { env } from "cloudflare:workers";
 import { cors, Router } from "../lib/router";
-import { flags, production, staging } from "./feature-flag";
+import { dev, flags, production, staging } from "./feature-flag";
 import { getNotifierHandlerForUid } from "./load-balancer";
 
 export const router = new Router({
@@ -9,9 +10,8 @@ export const router = new Router({
 })
 	.use(cors({
 		allowedHosts: [
-			production && "https://scichulaopenhouse.com",
-			staging && "https://ena.scichulaopenhouse.com",
-		].filter(it => typeof it === "string")
+			dev ? "*" : env.MAIN_SITE_URL
+ 		]
 	}))
 	.get("/ws/user-event", async ({ request }) => {
 		const uid = "TODO: authenticate";
