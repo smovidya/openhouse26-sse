@@ -12,15 +12,23 @@
 	/**
 	 * Dev config
 	 */
-	"d1_databases": [
-		{
-			"binding": "openhouse26_db",
-			"database_name": "openhouse26-db",
-			"database_id": "openhouse26_db_dev",
-		}
-	],
+	// "d1_databases": [
+	// 	{
+	// 		"binding": "openhouse26_db",
+	// 		"database_name": "openhouse26-db",
+	// 		"database_id": "openhouse26_db_dev",
+	// 	}
+	// ],
 	"vars": {
 		"ENVIRONMENT": "development",
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "Notifier",
+				"name": "NOTIFIER"
+			}
+		]
 	},
 	/**
 	 * Environment specific config
@@ -40,13 +48,13 @@
 					}
 				]
 			},
-			"d1_databases": [
-				{
-					"binding": "openhouse26_db",
-					"database_name": "openhouse26_db_staging",
-					"database_id": "df51e549-c836-416a-ba87-5168facb8aff",
-				}
-			],
+			// "d1_databases": [
+			// 	{
+			// 		"binding": "openhouse26_db",
+			// 		"database_name": "openhouse26_db_staging",
+			// 		"database_id": "df51e549-c836-416a-ba87-5168facb8aff",
+			// 	}
+			// ],
 			"routes": [
 				{
 					"pattern": "isei.scichulaopenhouse.com",
@@ -81,13 +89,6 @@
 					}
 				]
 			},
-			"d1_databases": [
-				{
-					"binding": "openhouse26_db",
-					"database_name": "openhouse26-db",
-					"database_id": "62624ef6-24a7-45e9-94d5-a955b19e7609",
-				}
-			],
 			"migrations": [
 				{
 					"tag": "v1",

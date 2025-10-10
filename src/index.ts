@@ -4,7 +4,7 @@ import { Notifier } from "./app/notifier";
 import { router } from "./app/routes";
 
 export default class SSEWorker extends WorkerEntrypoint implements SSEWorkerRpc {
-	fetch(request: Request): Response | Promise<Response> {
+	async fetch(request: Request): Promise<Response> {
 		return router.handle(request);
 	}
 
@@ -12,6 +12,12 @@ export default class SSEWorker extends WorkerEntrypoint implements SSEWorkerRpc 
 		const notifier = getNotifierHandlerForUid(uid);
 		return notifier.sendEvent(uid, data);
 	}
+
+
+	double(n: number) {
+		return n * 2;
+	}
+
 };
 
 export { Notifier };
@@ -19,4 +25,6 @@ export { Notifier };
 // Please copy paste this into other project
 interface SSEWorkerRpc {
 	sendEvent(uid: string, data: string): Promise<void>;
+	fetch(request: Request): Promise<Response>;
+	double(n: number): number;
 };
