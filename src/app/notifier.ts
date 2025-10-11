@@ -5,30 +5,32 @@ export class Notifier extends DurableObject<Env> {
 	// key is uid, Should we allow muliple client tho
 	#wss = new MultiMap<string, WebSocket>();
 
-	// idk if i need to name this `fetch` or not
-	createConnection(): Response {
+	fetch(req: Request): Response {
 		const webSocketPair = new WebSocketPair();
 		const [client, server] = Object.values(webSocketPair);
 		server.accept();
 
 		// close if no jwt are sent in 1 sec
 		const id = setTimeout(() => {
+			console.log("closing idle ws connection");
 			server.close();
 		}, 1000);
 
 		const persistConnection = (uid: string) => {
+			console.log("persist", { uid });
 			clearTimeout(id);
 			const connections = this.#wss.get(uid);
+
 			if (connections.length >= 5) {
-				return new Response("too many connections", {
-					status: 429
-				});
+				console.log("too many connections, closing", { uid });
+				server.close(1008, "Too many connections");
+				return
 			}
 
-			this.#wss.add(uid, client);
+			this.#wss.add(uid, server);
 
 			server.addEventListener("close", (cls) => {
-				this.#wss.remove(uid, client);
+				this.#wss.remove(uid, server);
 			});
 		}
 
@@ -38,6 +40,7 @@ export class Notifier extends DurableObject<Env> {
 			persistConnection(uid);
 		}, { once: true })
 
+		// return client
 		return new Response(null, {
 			status: 101,
 			webSocket: client,
@@ -45,9 +48,10 @@ export class Notifier extends DurableObject<Env> {
 	}
 
 	sendEvent(to: string, data: string | ArrayBuffer) {
-		const clients = this.#wss.get(to);
-		for (const client of clients) {
-			client.send(data);
+		const sockets = this.#wss.get(to);
+
+		for (const socket of sockets) {
+			socket.send(data);
 		}
 	}
 }
