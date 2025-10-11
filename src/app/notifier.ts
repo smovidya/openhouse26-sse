@@ -34,7 +34,7 @@ export class Notifier extends DurableObject<Env> {
 
 		server.addEventListener("message", ({ data }) => {
 			// const uid = "TODO: verify jwt on first message, ignore subsequent";
-			const uid = "isei";
+			const uid = String(data);
 			persistConnection(uid);
 		}, { once: true })
 
