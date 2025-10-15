@@ -1,7 +1,6 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { getNotifierHandlerForUid } from "./app/load-balancer";
-import { Notifier } from "./app/notifier";
 import { flags } from "./app/feature-flag";
+import { Notifier } from "./app/notifier";
 
 export default class SSEWorker extends WorkerEntrypoint implements SSEWorkerRpc {
 	async fetch(request: Request): Promise<Response> {
@@ -26,10 +25,10 @@ export default class SSEWorker extends WorkerEntrypoint implements SSEWorkerRpc 
 		return await notifier.fetch(request);
 	}
 
-	async sendEvent(uid: string, data: string) {
+	async sendEvent(participantId: string, data: string) {
 		const notifier = this.env.NOTIFIER.getByName("default");
-		await notifier.sendEvent(uid, data);
-		return uid
+		await notifier.sendEvent(participantId, data);
+		return participantId
 	}
 
 	double(n: number) {
@@ -44,7 +43,7 @@ export { Notifier };
 
 // Please copy paste this into other project
 interface SSEWorkerRpc {
-	sendEvent(uid: string, data: string): Promise<string>;
+	sendEvent(participantId: string, data: string): Promise<string>;
 	fetch(request: Request): Promise<Response>;
 	double(n: number): number;
 };
