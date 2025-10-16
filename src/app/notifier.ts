@@ -19,7 +19,7 @@ export class Notifier extends DurableObject<Env> {
 		}, 10000);
 
 		const persistConnection = (participantId: string) => {
-			console.log("[ws] Persisting", { participantId });
+			console.log("[ws] Persisting " + participantId, { participantId });
 			clearTimeout(id);
 			const connections = this.#wss.get(participantId);
 
