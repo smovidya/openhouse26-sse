@@ -10,6 +10,7 @@ export class Notifier extends DurableObject<Env> {
 		const webSocketPair = new WebSocketPair();
 		const [client, server] = Object.values(webSocketPair);
 		server.accept();
+		console.log("[ws] new connection");
 
 		// close if no jwt are sent in 1 sec
 		const id = setTimeout(() => {
